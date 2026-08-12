@@ -1,0 +1,18 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Local cache/data — canonical cache lives outside the repo in DATA_DIR, but guard
+# against anything accidentally landing here anyway
+.env
+*Zone.Identifier
+data/
+*.db
+*.sqlite
