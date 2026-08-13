@@ -7,6 +7,7 @@ import respx
 from httpx import Response
 
 from weather_context.client import forecast, historical
+from weather_context.config import Settings
 
 FIXTURE = json.loads(
     (Path(__file__).parent.parent / "fixtures" / "open_meteo_hourly_sample.json").read_text()
@@ -63,3 +64,16 @@ def test_historical_raises_when_hour_missing_from_response():
 
     with pytest.raises(ValueError, match="no observation"):
         historical(LAT, LON, datetime(2026, 8, 1, 23, tzinfo=UTC))
+
+
+@respx.mock
+def test_historical_respects_explicit_settings_override(tmp_path):
+    respx.get("https://archive-api.open-meteo.com/v1/archive").mock(
+        return_value=Response(200, json=FIXTURE)
+    )
+    explicit_dir = tmp_path / "explicit-weather-data"
+    settings = Settings(data_dir=explicit_dir)
+
+    historical(LAT, LON, TARGET, settings=settings)
+
+    assert (explicit_dir / "cache.db").exists()

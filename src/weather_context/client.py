@@ -4,7 +4,7 @@ from typing import Any
 import httpx
 
 from weather_context.cache import Cache, to_hour
-from weather_context.config import get_settings
+from weather_context.config import Settings, get_settings
 from weather_context.models import WeatherObservation
 
 _HOURLY_FIELDS = (
@@ -50,11 +50,23 @@ def _parse_hourly(
 
 
 def historical(
-    lat: float, lon: float, timestamp: datetime, *, use_cache: bool = True
+    lat: float,
+    lon: float,
+    timestamp: datetime,
+    *,
+    use_cache: bool = True,
+    settings: Settings | None = None,
 ) -> WeatherObservation:
     """Historical conditions at a place/hour. Cached locally — past weather never
-    changes, so a cache hit is returned as-is without a network call."""
-    settings = get_settings()
+    changes, so a cache hit is returned as-is without a network call.
+
+    `settings` lets an embedding application (e.g. a sibling repo importing this one
+    as a library) pin the cache location explicitly instead of relying on this
+    process's cwd-relative .env/DATA_DIR — important when multiple repos with their
+    own same-named DATA_DIR setting are combined in one process, where env-based
+    auto-discovery would silently resolve to the wrong directory instead of erroring.
+    Defaults to get_settings() (the standalone-CLI behavior) when omitted."""
+    settings = settings or get_settings()
     settings.ensure_dirs()
     cache = Cache(settings.cache_db_path) if use_cache else None
     try:
